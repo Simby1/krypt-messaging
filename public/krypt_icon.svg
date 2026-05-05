@@ -1,0 +1,33 @@
+<svg width="100%" viewBox="0 0 690 690" role="img" style="" xmlns="http://www.w3.org/2000/svg">
+  <title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Krypt app icon</title>
+  <desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">A shield icon with a stylized K and lock, in deep purple on near-black, for the Krypt messaging app</desc>
+
+  <rect width="680" height="680" fill="#0a0a0f" rx="120" style="fill:rgb(10, 10, 15);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Shield body -->
+  <path d="M340 120 L520 190 L520 360 Q520 490 340 570 Q160 490 160 360 L160 190 Z" fill="#1a1040" stroke="#7c3aed" stroke-width="3" style="fill:rgb(26, 16, 64);stroke:rgb(124, 58, 237);color:rgb(0, 0, 0);stroke-width:3px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Inner shield glow layer -->
+  <path d="M340 155 L495 215 L495 358 Q495 468 340 538 Q185 468 185 358 L185 215 Z" fill="#130d30" style="fill:rgb(19, 13, 48);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- K letterform -->
+  <line x1="290" y1="250" x2="290" y2="430" stroke="#a78bfa" stroke-width="22" stroke-linecap="round" style="fill:rgb(0, 0, 0);stroke:rgb(167, 139, 250);color:rgb(0, 0, 0);stroke-width:22px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="290" y1="340" x2="390" y2="250" stroke="#a78bfa" stroke-width="22" stroke-linecap="round" style="fill:rgb(0, 0, 0);stroke:rgb(167, 139, 250);color:rgb(0, 0, 0);stroke-width:22px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <line x1="290" y1="340" x2="395" y2="430" stroke="#a78bfa" stroke-width="22" stroke-linecap="round" style="fill:rgb(0, 0, 0);stroke:rgb(167, 139, 250);color:rgb(0, 0, 0);stroke-width:22px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Lock shackle -->
+  <path d="M355 325 Q355 290 390 290 Q425 290 425 325 L425 345" fill="none" stroke="#7c3aed" stroke-width="10" stroke-linecap="round" style="fill:none;stroke:rgb(124, 58, 237);color:rgb(0, 0, 0);stroke-width:10px;stroke-linecap:round;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Lock body -->
+  <rect x="337" y="342" width="88" height="66" rx="10" fill="#7c3aed" style="fill:rgb(124, 58, 237);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <!-- Lock keyhole -->
+  <circle cx="381" cy="366" r="11" fill="#0a0a0f" style="fill:rgb(10, 10, 15);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <rect x="375" y="366" width="12" height="18" rx="4" fill="#0a0a0f" style="fill:rgb(10, 10, 15);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- Accent dots — bottom corners -->
+  <circle cx="220" cy="480" r="5" fill="#7c3aed" opacity="0.5" style="fill:rgb(124, 58, 237);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.5;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <circle cx="460" cy="480" r="5" fill="#7c3aed" opacity="0.5" style="fill:rgb(124, 58, 237);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:0.5;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+  <!-- KRYPT wordmark -->
+  <text x="340" y="618" font-family="system-ui, sans-serif" font-size="52" font-weight="800" fill="#e2d9f3" text-anchor="middle" letter-spacing="14" font-style="italic" style="fill:rgb(226, 217, 243);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:system-ui, sans-serif;font-size:52px;font-weight:800;font-style:italic;text-anchor:middle;dominant-baseline:auto">KRYPT</text>
+</svg>
