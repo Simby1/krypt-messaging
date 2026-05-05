@@ -15,7 +15,7 @@ export interface KeyMaterial {
   pbkdf2Salt: string;
 }
 
-// ─── Private key: IndexedDB (CryptoKey object, NOT plaintext) ─────────────────
+// ─── Private key: IndexedDB ───────────────────────────────────────────────────
 
 const IDB_KEY = "krypt_private_key";
 
@@ -162,14 +162,14 @@ export async function decryptMessage(
 ): Promise<string> {
   const privateKey = await getPrivateKey();
 
-  const encryptedAesKey = base64ToBuf(
+  const encryptedAesKeyBuf = base64ToBuf(
     isSentByMe ? payload.encryptedKeyForSelf : payload.encryptedKey
   );
 
   const rawAesKey = await crypto.subtle.decrypt(
     { name: "RSA-OAEP" },
     privateKey,
-    encryptedAesKey
+    encryptedAesKeyBuf
   );
 
   const aesKey = await crypto.subtle.importKey(
@@ -205,10 +205,10 @@ async function deriveWrappingKey(password: string, salt: Uint8Array): Promise<Cr
 }
 
 /**
- * Import a public key from ANY of these formats the server might return:
- *   1. A JSON string of a JWK object  → '{"kty":"RSA","n":"...","e":"AQAB",...}'
- *   2. An already-parsed JWK object   → {kty:"RSA", n:"...", e:"AQAB", ...}
- *   3. A PEM string                   → "MIIBIjANBg..." or "-----BEGIN PUBLIC KEY-----\n..."
+ * Import a public key from any format:
+ *   1. JSON string of a JWK  → '{"kty":"RSA",...}'
+ *   2. Already-parsed JWK object
+ *   3. PEM or raw base64 DER (e.g. "MIIBIjAN...")
  */
 async function importPublicKey(publicKeyInput: string | object): Promise<CryptoKey> {
   // Case 2: already a plain object (JWK)
@@ -224,7 +224,7 @@ async function importPublicKey(publicKeyInput: string | object): Promise<CryptoK
 
   const str = publicKeyInput as string;
 
-  // Case 1: try JSON parse → JWK
+  // Case 1: JSON string → JWK
   try {
     const jwk = JSON.parse(str);
     if (jwk && typeof jwk === "object" && jwk.kty) {
@@ -237,21 +237,20 @@ async function importPublicKey(publicKeyInput: string | object): Promise<CryptoK
       );
     }
   } catch {
-    // not JSON, fall through to PEM handling
+    // not JSON, fall through
   }
 
   // Case 3: PEM or raw base64 DER
-  // Strip PEM headers/footers and whitespace if present
   const b64 = str
     .replace(/-----BEGIN [A-Z ]+-----/g, "")
     .replace(/-----END [A-Z ]+-----/g, "")
     .replace(/\s+/g, "");
 
-  const derBuffer = base64ToBuf(b64).buffer;
+  const derBytes = base64ToBuf(b64);
 
   return crypto.subtle.importKey(
     "spki",
-    derBuffer,
+    derBytes,
     { name: "RSA-OAEP", hash: "SHA-256" },
     false,
     ["encrypt"]
@@ -259,7 +258,6 @@ async function importPublicKey(publicKeyInput: string | object): Promise<CryptoK
 }
 
 export function bufToBase64(buf: Uint8Array): string {
-  // Use chunked approach to avoid stack overflow on large buffers
   let binary = "";
   const len = buf.byteLength;
   const chunkSize = 8192;
@@ -269,6 +267,16 @@ export function bufToBase64(buf: Uint8Array): string {
   return btoa(binary);
 }
 
+/**
+ * Returns a Uint8Array backed by a plain ArrayBuffer (not SharedArrayBuffer).
+ * This satisfies TypeScript's strict BufferSource typing for Web Crypto APIs.
+ */
 export function base64ToBuf(b64: string): Uint8Array {
-  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  const binary = atob(b64);
+  const buf = new ArrayBuffer(binary.length);
+  const view = new Uint8Array(buf);
+  for (let i = 0; i < binary.length; i++) {
+    view[i] = binary.charCodeAt(i);
+  }
+  return view;
 }
