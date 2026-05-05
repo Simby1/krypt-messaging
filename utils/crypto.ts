@@ -1,7 +1,5 @@
 import { get, set, del } from "idb-keyval";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface EncryptedPayload {
   ciphertext: string;
   iv: string;
@@ -22,36 +20,29 @@ const IDB_KEY = "krypt_private_key";
 export async function storePrivateKey(key: CryptoKey): Promise<void> {
   await set(IDB_KEY, key);
 }
-
 export async function loadPrivateKey(): Promise<CryptoKey | undefined> {
   return get<CryptoKey>(IDB_KEY);
 }
-
 export async function clearPrivateKey(): Promise<void> {
   await del(IDB_KEY);
 }
 
-// ─── Register: generate + wrap keys ──────────────────────────────────────────
+// ─── Register ─────────────────────────────────────────────────────────────────
 
 export async function generateAndWrapKeys(password: string): Promise<KeyMaterial> {
   const keyPair = await crypto.subtle.generateKey(
-    {
-      name: "RSA-OAEP",
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: "SHA-256",
-    },
+    { name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
     true,
     ["encrypt", "decrypt"]
   );
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const wrapIv = crypto.getRandomValues(new Uint8Array(16));
-  const wrappingKey = await deriveWrappingKey(password, salt);
+  const wrappingKey = await deriveWrappingKey(password, toAB(salt));
 
   const pkcs8Buffer = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
   const wrappedBuffer = await crypto.subtle.encrypt(
-    { name: "AES-CBC", iv: wrapIv },
+    { name: "AES-CBC", iv: toAB(wrapIv) },
     wrappingKey,
     pkcs8Buffer
   );
@@ -61,7 +52,6 @@ export async function generateAndWrapKeys(password: string): Promise<KeyMaterial
   combined.set(new Uint8Array(wrappedBuffer), wrapIv.byteLength);
 
   await storePrivateKey(keyPair.privateKey);
-
   const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 
   return {
@@ -71,19 +61,19 @@ export async function generateAndWrapKeys(password: string): Promise<KeyMaterial
   };
 }
 
-// ─── Login: unwrap server key into IndexedDB ──────────────────────────────────
+// ─── Login ────────────────────────────────────────────────────────────────────
 
 export async function unwrapAndStorePrivateKey(
   password: string,
   wrappedPrivateKeyB64: string,
   pbkdf2SaltB64: string
 ): Promise<void> {
-  const salt = base64ToBuf(pbkdf2SaltB64);
+  const salt = b64toAB(pbkdf2SaltB64);
   const wrappingKey = await deriveWrappingKey(password, salt);
 
-  const combined = base64ToBuf(wrappedPrivateKeyB64);
-  const wrapIv = combined.slice(0, 16);
-  const wrappedKey = combined.slice(16);
+  const combined = new Uint8Array(b64toAB(wrappedPrivateKeyB64));
+  const wrapIv = toAB(combined.slice(0, 16));
+  const wrappedKey = toAB(combined.slice(16));
 
   const pkcs8Buffer = await crypto.subtle.decrypt(
     { name: "AES-CBC", iv: wrapIv },
@@ -92,11 +82,9 @@ export async function unwrapAndStorePrivateKey(
   );
 
   const privateKey = await crypto.subtle.importKey(
-    "pkcs8",
-    pkcs8Buffer,
+    "pkcs8", pkcs8Buffer,
     { name: "RSA-OAEP", hash: "SHA-256" },
-    false,
-    ["decrypt"]
+    false, ["decrypt"]
   );
 
   await storePrivateKey(privateKey);
@@ -110,7 +98,7 @@ export async function getPrivateKey(): Promise<CryptoKey> {
   return key;
 }
 
-// ─── Encrypt a message ────────────────────────────────────────────────────────
+// ─── Encrypt ──────────────────────────────────────────────────────────────────
 
 export async function encryptMessage(
   plaintext: string,
@@ -120,31 +108,19 @@ export async function encryptMessage(
   const recipientPublicKey = await importPublicKey(recipientPublicKeyStr);
   const senderPublicKey = await importPublicKey(senderPublicKeyStr);
 
-  const aesKey = await crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["encrypt"]
-  );
+  const aesKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"]);
   const iv = crypto.getRandomValues(new Uint8Array(12));
 
   const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
+    { name: "AES-GCM", iv: toAB(iv) },
     aesKey,
     new TextEncoder().encode(plaintext)
   );
 
   const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
 
-  const encryptedKey = await crypto.subtle.encrypt(
-    { name: "RSA-OAEP" },
-    recipientPublicKey,
-    rawAesKey
-  );
-  const encryptedKeyForSelf = await crypto.subtle.encrypt(
-    { name: "RSA-OAEP" },
-    senderPublicKey,
-    rawAesKey
-  );
+  const encryptedKey = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, recipientPublicKey, rawAesKey);
+  const encryptedKeyForSelf = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, senderPublicKey, rawAesKey);
 
   return {
     ciphertext: bufToBase64(new Uint8Array(ciphertext)),
@@ -154,7 +130,7 @@ export async function encryptMessage(
   };
 }
 
-// ─── Decrypt a message ────────────────────────────────────────────────────────
+// ─── Decrypt ──────────────────────────────────────────────────────────────────
 
 export async function decryptMessage(
   payload: EncryptedPayload,
@@ -162,24 +138,18 @@ export async function decryptMessage(
 ): Promise<string> {
   const privateKey = await getPrivateKey();
 
-  const encryptedAesKeyBuf = base64ToBuf(
-    isSentByMe ? payload.encryptedKeyForSelf : payload.encryptedKey
-  );
-
   const rawAesKey = await crypto.subtle.decrypt(
     { name: "RSA-OAEP" },
     privateKey,
-    encryptedAesKeyBuf
+    b64toAB(isSentByMe ? payload.encryptedKeyForSelf : payload.encryptedKey)
   );
 
-  const aesKey = await crypto.subtle.importKey(
-    "raw", rawAesKey, "AES-GCM", false, ["decrypt"]
-  );
+  const aesKey = await crypto.subtle.importKey("raw", rawAesKey, "AES-GCM", false, ["decrypt"]);
 
   const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: base64ToBuf(payload.iv) },
+    { name: "AES-GCM", iv: b64toAB(payload.iv) },
     aesKey,
-    base64ToBuf(payload.ciphertext)
+    b64toAB(payload.ciphertext)
   );
 
   return new TextDecoder().decode(plaintext);
@@ -187,13 +157,23 @@ export async function decryptMessage(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function deriveWrappingKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+/** Convert Uint8Array → plain ArrayBuffer (satisfies BufferSource in all TS configs) */
+function toAB(u8: Uint8Array): ArrayBuffer {
+  return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer;
+}
+
+/** base64 → ArrayBuffer directly (no Uint8Array intermediate) */
+function b64toAB(b64: string): ArrayBuffer {
+  const binary = atob(b64);
+  const ab = new ArrayBuffer(binary.length);
+  const view = new Uint8Array(ab);
+  for (let i = 0; i < binary.length; i++) view[i] = binary.charCodeAt(i);
+  return ab;
+}
+
+async function deriveWrappingKey(password: string, salt: ArrayBuffer): Promise<CryptoKey> {
   const passwordKey = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"]
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
     { name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" },
@@ -204,79 +184,32 @@ async function deriveWrappingKey(password: string, salt: Uint8Array): Promise<Cr
   );
 }
 
-/**
- * Import a public key from any format:
- *   1. JSON string of a JWK  → '{"kty":"RSA",...}'
- *   2. Already-parsed JWK object
- *   3. PEM or raw base64 DER (e.g. "MIIBIjAN...")
- */
 async function importPublicKey(publicKeyInput: string | object): Promise<CryptoKey> {
-  // Case 2: already a plain object (JWK)
   if (typeof publicKeyInput === "object" && publicKeyInput !== null) {
-    return crypto.subtle.importKey(
-      "jwk",
-      publicKeyInput as JsonWebKey,
-      { name: "RSA-OAEP", hash: "SHA-256" },
-      false,
-      ["encrypt"]
-    );
+    return crypto.subtle.importKey("jwk", publicKeyInput as JsonWebKey, { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
   }
-
   const str = publicKeyInput as string;
-
-  // Case 1: JSON string → JWK
   try {
     const jwk = JSON.parse(str);
-    if (jwk && typeof jwk === "object" && jwk.kty) {
-      return crypto.subtle.importKey(
-        "jwk",
-        jwk as JsonWebKey,
-        { name: "RSA-OAEP", hash: "SHA-256" },
-        false,
-        ["encrypt"]
-      );
+    if (jwk?.kty) {
+      return crypto.subtle.importKey("jwk", jwk as JsonWebKey, { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
     }
-  } catch {
-    // not JSON, fall through
-  }
+  } catch { /* fall through */ }
 
-  // Case 3: PEM or raw base64 DER
-  const b64 = str
-    .replace(/-----BEGIN [A-Z ]+-----/g, "")
-    .replace(/-----END [A-Z ]+-----/g, "")
-    .replace(/\s+/g, "");
-
-  const derBytes = base64ToBuf(b64);
-
-  return crypto.subtle.importKey(
-    "spki",
-    derBytes,
-    { name: "RSA-OAEP", hash: "SHA-256" },
-    false,
-    ["encrypt"]
-  );
+  // PEM or raw base64 DER
+  const b64 = str.replace(/-----BEGIN [A-Z ]+-----/g, "").replace(/-----END [A-Z ]+-----/g, "").replace(/\s+/g, "");
+  return crypto.subtle.importKey("spki", b64toAB(b64), { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
 }
 
 export function bufToBase64(buf: Uint8Array): string {
   let binary = "";
-  const len = buf.byteLength;
-  const chunkSize = 8192;
-  for (let i = 0; i < len; i += chunkSize) {
-    binary += String.fromCharCode(...buf.subarray(i, i + chunkSize));
+  for (let i = 0; i < buf.byteLength; i += 8192) {
+    binary += String.fromCharCode(...buf.subarray(i, i + 8192));
   }
   return btoa(binary);
 }
 
-/**
- * Returns a Uint8Array backed by a plain ArrayBuffer (not SharedArrayBuffer).
- * This satisfies TypeScript's strict BufferSource typing for Web Crypto APIs.
- */
+/** @deprecated use b64toAB internally; exported for any external callers */
 export function base64ToBuf(b64: string): Uint8Array {
-  const binary = atob(b64);
-  const buf = new ArrayBuffer(binary.length);
-  const view = new Uint8Array(buf);
-  for (let i = 0; i < binary.length; i++) {
-    view[i] = binary.charCodeAt(i);
-  }
-  return view;
+  return new Uint8Array(b64toAB(b64));
 }
