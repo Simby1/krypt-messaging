@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KRYPT: End-to-End Encrypted Messaging
 
-## Getting Started
+## 🛡️ Security Architecture
 
-First, run the development server:
+KRYPT is built on the principle of Zero-Knowledge. The server acts as a blind postman—it delivers encrypted packets but never possesses the keys to open them.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Key Management
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Asymmetric Keys:** Upon initialization, the client generates an RSA-OAEP (2048-bit) key pair using the Web Crypto API.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Private Key Storage:** The Private Key is stored in IndexedDB using idb-keyval. It never leaves the browser and is never sent over the network.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Public Key Exchange:** Public keys are registered on the backend /users endpoint, allowing users to discover each other's "padlocks."
 
-## Learn More
+### Encryption Flow (The Hybrid Approach)
 
-To learn more about Next.js, take a look at the following resources:
+To balance security and performance, KRYPT uses a hybrid encryption model:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Symmetric Encryption:** The message content is encrypted using AES-GCM with a one-time random session key.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Asymmetric Wrapping:** The AES session key is then encrypted (wrapped) using the recipient's RSA-OAEP Public Key.
 
-## Deploy on Vercel
+**Transmission:** The server receives a "Payload" containing the ciphertext, the encrypted key bundle (envelope), and the Initialization Vector (IV).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Authentication
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**JWT (JSON Web Tokens):** Secure session management is handled via JWT. Every request to the /messages and /users endpoints requires a valid Bearer token, ensuring that only authenticated users can interact with the signal node.
+
+## 🚀 Technical Stack
+
+- Frontend: Next.js, Tailwind CSS v4, Lucide Icons.
+- Security: Web Crypto API, IndexedDB.
+- Backend: Whisperbox API (E2EE Optimized).
+
+## ⚠️ Security Trade-offs & Limitations
+
+- Device Binding: Since the Private Key is stored in IndexedDB, messages can only be decrypted on the device they were received on.
+- Metadata: While the message body is fully encrypted, the server can still see who is talking to whom (traffic analysis).
