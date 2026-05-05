@@ -23,7 +23,7 @@ export async function generateUserKeys() {
   return publicJwk;
 }
 
-// to send messages
+// to send messages - encrypt logic for sender
 export async function encryptForRecipient(message: string, recipientJwk: any) {
   // 1. Import/get recipeints public key
   const publicKey = await window.crypto.subtle.importKey(
@@ -64,4 +64,41 @@ export async function encryptForRecipient(message: string, recipientJwk: any) {
     envelope: btoa(String.fromCharCode(...new Uint8Array(encryptedEnvelope))),
     iv: btoa(String.fromCharCode(...iv))
   };
+}
+
+// DECRYPT LOGIC for recipient
+export async function decryptMessage(encryptedData: { ciphertext: string, envelope: string, iv: string }) {
+  // 1. obtain physical key from local storage
+  const privateKey = await get('krypt-private-key');
+  if (!privateKey) throw new Error("No private key found on this device.");
+
+  // 2. Decode the Base64 strings for AI back into binary
+  const ciphertext = Uint8Array.from(atob(encryptedData.ciphertext), c => c.charCodeAt(0));
+  const envelope = Uint8Array.from(atob(encryptedData.envelope), c => c.charCodeAt(0));
+  const iv = Uint8Array.from(atob(encryptedData.iv), c => c.charCodeAt(0));
+
+  // 3. for recipient to access the message and aes key with their private Key
+  const decryptedAesKeyBuffer = await window.crypto.subtle.decrypt(
+    { name: "RSA-OAEP" },
+    privateKey,
+    envelope
+  );
+
+  // 4. Import aes so the browser can use it
+  const aesKey = await window.crypto.subtle.importKey(
+    "raw",
+    decryptedAesKeyBuffer,
+    "AES-GCM",
+    false,
+    ["decrypt"]
+  );
+
+  // 5. Unlock/decrypt
+  const decryptedBuffer = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    aesKey,
+    ciphertext
+  );
+
+  return new TextDecoder().decode(decryptedBuffer);
 }
