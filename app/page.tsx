@@ -169,7 +169,7 @@ export default function AuthPage() {
             className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all text-sm tracking-wide"
           >
             {loading
-              ? mode === "register" ? "Generating keys..." : "Decrypting keys..."
+              ? mode === "register" ? "Creating Account..." : "Signing In..."
               : mode === "register" ? "Create Account" : "Sign In"}
           </button>
         </div>
